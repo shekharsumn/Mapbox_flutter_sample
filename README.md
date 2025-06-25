@@ -2,6 +2,8 @@
 # 🗺️ MapBox 3D Flutter App – Technical Documentation
 
 ---
+![3D Map with custom Model](https://imgur.com/a/0bwOmU5)
+---
 
 ## 📦 Project Overview
 
