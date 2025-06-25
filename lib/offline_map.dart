@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class CombinedOffline3DMap extends StatefulWidget {
   const CombinedOffline3DMap({super.key});
@@ -23,6 +24,8 @@ class _CombinedOffline3DMapState extends State<CombinedOffline3DMap> {
 
   TileStore? _tileStore;
   OfflineManager? _offlineManager;
+
+  static const geoJsonUrl = 'https://raw.githubusercontent.com/shekharsumn/Mapbox_flutter_sample/main/assets/sf_airport_route.geojson';
 
   @override
   void dispose() {
@@ -181,16 +184,21 @@ class _CombinedOffline3DMapState extends State<CombinedOffline3DMap> {
     await mapboxMap?.style.addLayer(carModelLayer);
   }
 
-  Future<void> _addRouteGeoJson() async {
-    final geoJsonString = await rootBundle.loadString(
-      'assets/sf_airport_route.geojson',
-    );
+  Future<String> _loadGeoJsonFromNetwork() async {
+    final response = await http.get(Uri.parse(geoJsonUrl));
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to load GeoJSON');
+    }
+  }
 
+  Future<void> _addRouteGeoJson() async {
+    final geoJsonString = await _loadGeoJsonFromNetwork();
     // Add GeoJSON route line source
     await mapboxMap?.style.addSource(
       GeoJsonSource(id: "route-source", data: geoJsonString),
     );
-
     // Add the route line layer
     await mapboxMap?.style.addLayer(
       LineLayer(id: "route-line", sourceId: "route-source")
@@ -200,16 +208,12 @@ class _CombinedOffline3DMapState extends State<CombinedOffline3DMap> {
   }
 
   Future<void> _addStartEndMarkersFromGeoJson() async {
-    final geoJsonString = await rootBundle.loadString(
-      'assets/sf_airport_route.geojson',
-    );
+    final geoJsonString = await _loadGeoJsonFromNetwork();
     final decoded = json.decode(geoJsonString);
     final coordinates =
         decoded['features'][0]['geometry']['coordinates'] as List;
-
     final startCoord = coordinates.first;
     final endCoord = coordinates.last;
-
     final startPosition = Point(
       coordinates: Position(startCoord[0], startCoord[1]),
     );
