@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'interface/example.dart';
 
-class ModelLayerExample extends StatefulWidget implements Example {
+class RouteMapExample extends StatefulWidget implements Example {
   @override
   final Widget leading = const Icon(Icons.view_in_ar);
   @override
@@ -13,13 +13,13 @@ class ModelLayerExample extends StatefulWidget implements Example {
   @override
   final String subtitle = 'Showcase the usage of a 3D model layer.';
 
-  const ModelLayerExample({super.key});
+  const RouteMapExample({super.key});
 
   @override
-  State<StatefulWidget> createState() => _ModelLayerExampleState();
+  State<StatefulWidget> createState() => _RouteMapExampleState();
 }
 
-class _ModelLayerExampleState extends State<ModelLayerExample> {
+class _RouteMapExampleState extends State<RouteMapExample> {
   MapboxMap? mapboxMap;
 
   final centerPosition = Position(-122.385374, 37.61501);

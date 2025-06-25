@@ -2,7 +2,7 @@
 # 🗺️ MapBox 3D Flutter App – Technical Documentation
 
 ---
-![3D Map with custom Model](https://imgur.com/a/0bwOmU5)
+[3D Map with custom Model](https://imgur.com/a/0bwOmU5)
 ---
 
 ## 📦 Project Overview
@@ -57,7 +57,7 @@
 ```
 lib/
   main.dart
-  map_type_selection_screen.dart
+  route_map.dart
 assets/
   sf_airport_route.geojson
   sportcar.glb

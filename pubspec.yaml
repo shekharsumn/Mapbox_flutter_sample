@@ -28,6 +28,8 @@ flutter:
     - assets/
     - assets/sportcar.glb
     - assets/sf_airport_route.geojson
+    - assets/marker-green.png
+    - assets/marker-red.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
