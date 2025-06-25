@@ -10,10 +10,7 @@ void main() async {
   await Permission.locationWhenInUse.request();
 
   // Pass your access token to MapboxOptions so you can load a map
-  // String accessToken = const String.fromEnvironment("ACCESS_TOKEN");
-  //String accessToken =  "sk.eyJ1Ijoic2hla2hhcnN1bW4iLCJhIjoiY21jYWR3MjBzMDF4NDJrcW5jc21kdDd1cSJ9.cuQYP0iF8J315hj3nPsBLw";
-  String accessToken =
-      "pk.eyJ1Ijoic2hla2hhcnN1bW4iLCJhIjoiY21jOTM0aXJtMGs4ejJpczkwbnJocjdlZyJ9.GUXxuUnJYY7-9UfKQEuIIg";
+  String accessToken = const String.fromEnvironment("ACCESS_TOKEN");
   MapboxOptions.setAccessToken(accessToken);
   debugPrint("Mapbox Access Token: $accessToken");
 
