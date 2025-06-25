@@ -5,8 +5,7 @@
 
 ## 📦 Project Overview
 
-**MapBox 3D** is a cross-platform Flutter application demonstrating integration with Mapbox for interactive 3D and styled maps. The app supports Android and iOS, and features a launch screen with selectable map types.
-
+**MapBox 3D** is a cross-platform Flutter application demonstrating integration with Mapbox for interactive 3D and styled maps. The app supports Android and iOS.
 ---
 
 ## 🚀 Getting Started
