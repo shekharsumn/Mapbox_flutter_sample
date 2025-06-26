@@ -4,6 +4,7 @@ import 'package:mapbox_3d/route_map.dart';
 import 'package:mapbox_3d/turn_navigation.dart';
 import 'package:mapbox_3d/navigation_demo.dart';
 import 'package:mapbox_3d/permission_status_widget.dart';
+import 'package:mapbox_3d/terrain_3d.dart';
 //import 'package:mapbox_3d/route_map.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mapbox_3d/permission_utils.dart';
@@ -99,6 +100,16 @@ class MapSelectionScreen extends StatelessWidget {
               () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const NavigationDemo()),
+              ),
+            ),
+            _buildMapCard(
+              context,
+              'Terrain View 3D',
+              Icons.streetview,
+              Colors.purple,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TerrainView3D()),
               ),
             ),
             _buildMapCard(
