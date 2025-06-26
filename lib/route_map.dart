@@ -30,10 +30,11 @@ class _RouteMapExampleState extends State<RouteMapExample> {
     return MapWidget(
         cameraOptions: CameraOptions(
             center: Point(coordinates: centerPosition),
-            zoom: 17,
-            bearing: 15,
-            pitch: 55),
+            zoom: 16.5,
+            bearing: 25,
+            pitch: 60),
         key: const ValueKey<String>('mapWidget'),
+        styleUri: MapboxStyles.SATELLITE_STREETS,
         onMapCreated: _onMapCreated,
         onStyleLoadedListener: _onStyleLoaded);
   }
@@ -47,6 +48,7 @@ class _RouteMapExampleState extends State<RouteMapExample> {
     final data = await rootBundle.loadString('assets/sf_airport_route.geojson');
     await mapboxMap?.style.addSource(GeoJsonSource(id: "line", data: data));
     await _addRouteLine();
+    await _add3DBuildingsLayer();
   }
 
   addModelLayer() async {
@@ -68,8 +70,8 @@ class _RouteMapExampleState extends State<RouteMapExample> {
     var carModelLayer = ModelLayer(id: "model-car-id", sourceId: "carSourceId");
     carModelLayer.modelId =
         "asset://assets/sportcar.glb"; // Local assets need to be referenced directly
-    carModelLayer.modelScale = [4, 4, 4];
-    carModelLayer.modelRotation = [0, 0, 270];
+    carModelLayer.modelScale = [3.5, 3.5, 3.5];
+    carModelLayer.modelRotation = [0, 0, 45];
     carModelLayer.modelType = ModelType.COMMON_3D;
     mapboxMap?.style.addLayer(carModelLayer);
   }
@@ -123,5 +125,30 @@ class _RouteMapExampleState extends State<RouteMapExample> {
         ],
       ],
     ));
+  }
+
+  Future<void> _add3DBuildingsLayer() async {
+    await mapboxMap?.style.addLayer(
+      FillExtrusionLayer(id: "3d-buildings", sourceId: "composite")
+        ..sourceLayer = "building"
+        ..filter = ['==', 'extrude', 'true']
+        ..minZoom = 15
+        ..fillExtrusionColorExpression = [
+          'interpolate',
+          ['linear'],
+          ['get', 'height'],
+          0,
+          'rgb(200, 200, 200)',
+          100,
+          'rgb(150, 150, 150)',
+          200,
+          'rgb(100, 100, 100)',
+        ]
+        ..fillExtrusionOpacity = 0.8
+        ..fillExtrusionHeightExpression = ['get', 'height']
+        ..fillExtrusionBaseExpression = ['get', 'min_height']
+        ..fillExtrusionAmbientOcclusionIntensity = 0.3
+        ..fillExtrusionAmbientOcclusionRadius = 2.0,
+    );
   }
 }

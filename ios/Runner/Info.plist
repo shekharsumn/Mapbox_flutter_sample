@@ -53,5 +53,55 @@
 	<string>This app needs access to your location to show your position on the map.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>This app needs local network access for debugging and development purposes.</string>
+	
+	<!-- Additional permissions for Mapbox features -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access for AR navigation and 3D model visualization.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access for voice navigation and audio feedback.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to save map screenshots and offline map data.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save map screenshots to your photo library.</string>
+	
+	<!-- Background location for navigation -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>audio</string>
+		<string>background-processing</string>
+	</array>
+	
+	<!-- Required device capabilities -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>location-services</string>
+		<string>gps</string>
+		<string>armv7</string>
+	</array>
+	
+	<!-- Privacy settings for iOS 14+ -->
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>Navigation</key>
+		<string>This app needs precise location for turn-by-turn navigation.</string>
+	</dict>
+	
+	<!-- App Transport Security for network requests -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>mapbox.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>
