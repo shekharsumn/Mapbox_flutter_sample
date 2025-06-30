@@ -104,19 +104,19 @@ class PermissionUtils {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Permission Required'),
-            content: Text(
+            title: const Text('Permission Required'),
+            content: const Text(
               'This permission is required for the app to function properly. '
               'Please enable it in your device settings.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Open Settings'),
+                child: const Text('Open Settings'),
               ),
             ],
           );

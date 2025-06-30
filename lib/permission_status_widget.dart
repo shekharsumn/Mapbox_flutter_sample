@@ -1,48 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:mapbox_3d/permission_utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mapbox_3d/bloc/bloc.dart';
 
-class PermissionStatusWidget extends StatefulWidget {
+class PermissionStatusWidget extends StatelessWidget {
   const PermissionStatusWidget({super.key});
 
   @override
-  State<PermissionStatusWidget> createState() => _PermissionStatusWidgetState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => PermissionCubit()..loadPermissions(),
+      child: const _PermissionStatusWidgetContent(),
+    );
+  }
 }
 
-class _PermissionStatusWidgetState extends State<PermissionStatusWidget> {
-  Map<Permission, PermissionStatus> _permissionStatuses = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPermissionStatuses();
-  }
-
-  Future<void> _loadPermissionStatuses() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    Map<Permission, PermissionStatus> statuses = {};
-    final permissions = [
-      Permission.locationWhenInUse,
-      Permission.locationAlways,
-      Permission.camera,
-      Permission.microphone,
-      Permission.storage,
-      Permission.audio,
-    ];
-
-    for (Permission permission in permissions) {
-      statuses[permission] = await permission.status;
-    }
-
-    setState(() {
-      _permissionStatuses = statuses;
-      _isLoading = false;
-    });
-  }
+class _PermissionStatusWidgetContent extends StatelessWidget {
+  const _PermissionStatusWidgetContent();
 
   Color _getStatusColor(PermissionStatus status) {
     switch (status) {
@@ -58,8 +33,6 @@ class _PermissionStatusWidgetState extends State<PermissionStatusWidget> {
         return Colors.yellow;
       case PermissionStatus.provisional:
         return Colors.blue;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -84,98 +57,139 @@ class _PermissionStatusWidgetState extends State<PermissionStatusWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Loading permission status...'),
-            ],
-          ),
-        ),
-      );
-    }
+    return BlocBuilder<PermissionCubit, PermissionState>(
+      builder: (context, state) {
+        if (state is PermissionLoading) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text('Loading permission status...'),
+                ],
+              ),
+            ),
+          );
+        }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Permission Status',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  onPressed: _loadPermissionStatuses,
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh',
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...(_permissionStatuses.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(entry.value),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(_getPermissionName(entry.key)),
-                    ),
-                    Text(
-                      entry.value.toString().split('.').last,
-                      style: TextStyle(
-                        color: _getStatusColor(entry.value),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList()),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await PermissionUtils.requestAllPermissionsWithDialogs(context);
-                      _loadPermissionStatuses();
+        if (state is PermissionError) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Icon(Icons.error, color: Colors.red, size: 48),
+                  const SizedBox(height: 8),
+                  Text('Error: ${state.message}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<PermissionCubit>().loadPermissions();
                     },
-                    child: const Text('Request All Permissions'),
+                    child: const Text('Retry'),
                   ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    await openAppSettings();
-                    _loadPermissionStatuses();
-                  },
-                  child: const Text('Open Settings'),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        if (state is PermissionLoaded) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Permission Status',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          context.read<PermissionCubit>().refreshPermissions();
+                        },
+                        icon: const Icon(Icons.refresh),
+                        tooltip: 'Refresh',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...(state.permissionStatuses.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(entry.value),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(_getPermissionName(entry.key)),
+                          ),
+                          Text(
+                            entry.value.toString().split('.').last,
+                            style: TextStyle(
+                              color: _getStatusColor(entry.value),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList()),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await PermissionUtils.requestAllPermissionsWithDialogs(context);
+                            if (context.mounted) {
+                              context.read<PermissionCubit>().refreshPermissions();
+                            }
+                          },
+                          child: const Text('Request All Permissions'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await openAppSettings();
+                          if (context.mounted) {
+                            context.read<PermissionCubit>().refreshPermissions();
+                          }
+                        },
+                        child: const Text('Open Settings'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return const Card(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('No permission data available'),
+          ),
+        );
+      },
     );
   }
 } 

@@ -142,37 +142,6 @@ class _NavigationDemoState extends State<NavigationDemo> {
     );
   }
 
-  void _showInfoPanel(BuildContext context) {
-    Positioned(
-      bottom: 16.0,
-      left: 16.0,
-      right: 16.0,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Navigation Controls',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '• Tap the arrow button to expand/collapse controls\n'
-                '• Use + and - buttons to zoom in/out\n'
-                '• Use rotation buttons to change bearing\n'
-                '• Use pitch slider to change map tilt\n'
-                '• Tap compass to reset bearing to north',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;

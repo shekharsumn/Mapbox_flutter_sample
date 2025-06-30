@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:mapbox_3d/offline_map.dart';
-import 'package:mapbox_3d/route_map.dart';
 import 'package:mapbox_3d/turn_navigation.dart';
 import 'package:mapbox_3d/navigation_demo.dart';
 import 'package:mapbox_3d/permission_status_widget.dart';
 import 'package:mapbox_3d/terrain_3d.dart';
-//import 'package:mapbox_3d/route_map.dart';
+import 'package:mapbox_3d/cubit_integration_example.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mapbox_3d/permission_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mapbox_3d/bloc/bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,10 +47,32 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mapbox Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MapSelectionScreen(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AppCubit>(
+          create: (context) => AppCubit()..initializeApp(),
+        ),
+        BlocProvider<NavigationCubit>(
+          create: (context) => NavigationCubit()..initializeNavigation(),
+        ),
+      ],
+      child: BlocBuilder<AppCubit, AppState>(
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'Mapbox Demo',
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              brightness: Brightness.light,
+            ),
+            darkTheme: ThemeData(
+              primarySwatch: Colors.blue,
+              brightness: Brightness.dark,
+            ),
+            themeMode: state is AppLoaded ? state.themeMode : ThemeMode.system,
+            home: const MapSelectionScreen(),
+          );
+        },
+      ),
     );
   }
 }
@@ -64,6 +87,23 @@ class MapSelectionScreen extends StatelessWidget {
         title: const Text('Mapbox 3D Demo'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        actions: [
+          BlocBuilder<AppCubit, AppState>(
+            builder: (context, state) {
+              return IconButton(
+                onPressed: () {
+                  context.read<AppCubit>().toggleTheme();
+                },
+                icon: Icon(
+                  state is AppLoaded && state.themeMode == ThemeMode.dark
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                ),
+                tooltip: 'Toggle Theme',
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -114,6 +154,16 @@ class MapSelectionScreen extends StatelessWidget {
             ),
             _buildMapCard(
               context,
+              'CUBIT Integration Example',
+              Icons.integration_instructions,
+              Colors.pink,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CubitIntegrationExample()),
+              ),
+            ),
+            _buildMapCard(
+              context,
               'Settings',
               Icons.settings,
               Colors.purple,
@@ -143,7 +193,7 @@ class MapSelectionScreen extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [color.withOpacity(0.8), color],
+              colors: [color.withValues(alpha: 0.8), color],
             ),
           ),
           child: Column(
@@ -194,6 +244,20 @@ class MapSelectionScreen extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('App Settings'),
+              subtitle: const Text('Configure app preferences'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AppSettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
               subtitle: const Text('App information and version'),
@@ -228,31 +292,8 @@ class MapSelectionScreen extends StatelessWidget {
         Text('• Interactive navigation controls'),
         Text('• Permission management'),
         Text('• Multiple map styles'),
+        Text('• CUBIT state management'),
       ],
-    );
-  }
-
-  void _showInfoPanel(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Map Style', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            SizedBox(height: 8),
-            Text('Navigation Controls', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 4),
-            Text('• Tap the arrow button to expand/collapse controls\n'
-                '• Use + and - buttons to zoom in/out\n'
-                '• Use rotation buttons to change bearing\n'
-                '• Use pitch slider to change map tilt\n'
-                '• Tap compass to reset bearing to north'),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -271,6 +312,151 @@ class PermissionSettingsScreen extends StatelessWidget {
       body: const Padding(
         padding: EdgeInsets.all(16.0),
         child: PermissionStatusWidget(),
+      ),
+    );
+  }
+}
+
+class AppSettingsScreen extends StatelessWidget {
+  const AppSettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('App Settings'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: BlocBuilder<AppCubit, AppState>(
+        builder: (context, state) {
+          if (state is AppLoaded) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Theme',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ListTile(
+                                  title: const Text('Light'),
+                                  leading: Radio<ThemeMode>(
+                                    value: ThemeMode.light,
+                                    groupValue: state.themeMode,
+                                    onChanged: (ThemeMode? value) {
+                                      if (value != null) {
+                                        context.read<AppCubit>().setTheme(value);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: ListTile(
+                                  title: const Text('Dark'),
+                                  leading: Radio<ThemeMode>(
+                                    value: ThemeMode.dark,
+                                    groupValue: state.themeMode,
+                                    onChanged: (ThemeMode? value) {
+                                      if (value != null) {
+                                        context.read<AppCubit>().setTheme(value);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: ListTile(
+                                  title: const Text('System'),
+                                  leading: Radio<ThemeMode>(
+                                    value: ThemeMode.system,
+                                    groupValue: state.themeMode,
+                                    onChanged: (ThemeMode? value) {
+                                      if (value != null) {
+                                        context.read<AppCubit>().setTheme(value);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Map Settings',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SwitchListTile(
+                            title: const Text('Enable 3D Mode'),
+                            subtitle: const Text('Show maps in 3D by default'),
+                            value: state.settings['enable3D'] ?? false,
+                            onChanged: (bool value) {
+                              context.read<AppCubit>().updateSetting('enable3D', value);
+                            },
+                          ),
+                          SwitchListTile(
+                            title: const Text('Enable Offline Maps'),
+                            subtitle: const Text('Allow downloading maps for offline use'),
+                            value: state.settings['enableOfflineMaps'] ?? true,
+                            onChanged: (bool value) {
+                              context.read<AppCubit>().updateSetting('enableOfflineMaps', value);
+                            },
+                          ),
+                          SwitchListTile(
+                            title: const Text('Enable Voice Navigation'),
+                            subtitle: const Text('Provide voice guidance during navigation'),
+                            value: state.settings['enableVoiceNavigation'] ?? true,
+                            onChanged: (bool value) {
+                              context.read<AppCubit>().updateSetting('enableVoiceNavigation', value);
+                            },
+                          ),
+                          SwitchListTile(
+                            title: const Text('Enable Traffic'),
+                            subtitle: const Text('Show real-time traffic information'),
+                            value: state.settings['enableTraffic'] ?? false,
+                            onChanged: (bool value) {
+                              context.read<AppCubit>().updateSetting('enableTraffic', value);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
